@@ -1,0 +1,44 @@
+[
+    {
+        "id": "db7d25d3.9110a8",
+        "type": "ui_template",
+        "z": "d55d7ad7.228b5",
+        "group": "8865f91.bf77188",
+        "name": "",
+        "order": 1,
+        "width": "8",
+        "height": "8",
+        "format": "<style>\n  .player {\n    overflow: hidden;\n    height: 100%;\n    background: url({{valCover}}) center top;\n    background-size: cover;\n    background-repeat: no-repeat;\n  }\n\n  .player .player-ui {\n    position: relative;\n    height: 100%;\n    width: 100%;\n    display: flex;\n    justify-content: flex-end;\n    flex-direction: column;\n    /*padding: 1em;*/\n  }\n\n  .player .player-ui .title {\n    /*display: -webkit-box;*/\n    display: flex;\n    /*-webkit-box-pack: center;*/\n    /*justify-content: center;*/\n  }\n\n  .player .player-ui .title h3 {\n    margin: 0;\n    color: white;\n    font-size: 2em;\n    font-weight: 100;\n  }\n\n  .player .player-ui .subtitle {\n    /*padding: 15px 35px 0px 35px;*/\n    /*display: -webkit-box;*/\n    display: flex;\n    /*-webkit-box-pack: justify;*/\n    /*justify-content: space-between;*/\n  }\n\n  .player .player-ui .subtitle p {\n    margin: 0;\n    color: white;\n    font-weight: 100;\n  }\n\n  .player .player-ui .controls {\n    /*display: -webkit-box;*/\n    /*display: flex;*/\n    /*-webkit-box-pack: justify;*/\n    /*justify-content: space-between;*/\n    display: grid;\n    padding: 0.85em;\n    background-color: hsla(0, 0%, 100%, .95);\n    margin-top: 1.25em;\n  }\n\n  .player .player-ui .controls i {\n    color: black;\n    font-size: 1.85em;\n    opacity: .4;\n    cursor: pointer;\n  }\n\n  .player .player-ui .controls i:hover {\n    opacity: .85;\n  }\n\n  .player .player-ui .controls i:focus {\n    outline: none;\n    border: 0;\n  }\n\n  .player .player-ui .controls .left-half {\n    grid-column: 1;\n  }\n\n  .player .player-ui .controls .right-half {\n    grid-column: 2;\n    text-align: right;\n  }\n\n  .right-half .slider {\n    width: 75%;\n    /*margin: 50% auto;*/\n  }\n\n  .right-half .slider input[type=\"range\"] {\n    -webkit-appearance: none !important;\n    width: 100%;\n    height: 0.5em;\n    background-color: black;\n    border-radius: 1em;\n    margin: auto;\n    opacity: .4;\n  }\n\n  .right-half .slider input[type=\"range\"]::-webkit-slider-thumb {\n    -webkit-appearance: none !important;\n    width: 1em;\n    height: 1em;\n    background-color: white;\n    border-radius: 1em;\n    opacity: .85;\n  }\n\n  /*.player .player-ui .controls button {*/\n  /*  all: unset;*/\n  /*  cursor: pointer;*/\n  /*  border-radius: 50%;*/\n  /*  background-color: black;*/\n  /*  opacity: 0.33;*/\n  /*}*/\n</style>\n\n<div class=\"player\">\n  <div class=\"player-ui\">\n    <div class=\"title\">\n      <h3>{{valTitle}}</h3>\n    </div>\n    <div class=\"subtitle\">\n      <p>{{valSubtitle}}</p>\n    </div>\n    <div class=\"controls\">\n      <div class=\"left-half\" ng-show=\"!showVolume\">\n        <i class=\"material-icons\" ng-click=\"setRewind(-10)\">replay_10</i>\n        <i class=\"material-icons\" ng-click=\"send({payload: {command: 'prev'}})\">fast_rewind</i>\n        <i class=\"material-icons\" ng-click=\"send({payload: {command: 'play'}})\" ng-show=\"!showPlay\">play_arrow</i>\n        <i class=\"material-icons\" ng-click=\"send({payload: {command: 'stop'}})\" ng-show=\"showPlay\">pause</i>\n        <i class=\"material-icons\" ng-click=\"send({payload: {command: 'next'}})\">fast_forward</i>\n        <i class=\"material-icons\" ng-click=\"setRewind(10)\">forward_10</i>\n      </div>\n      <div class=\"right-half\">\n        <div style=\"display: inline-block;\" ng-show=\"showVolume\" class=\"slider\">\n          <input type=\"range\" min=\"1\" max=\"100\" ng-model=\"vol\" ng-click=\"setVolume(vol)\" ng-mouseleave=\"clickVolume()\">\n        </div>\n        <div style=\"display: inline-block;\" ng-show=\"!showVolume\">\n          <i class=\"material-icons\"\n            ng-click=\"send({payload: {command: 'sendText', text: 'поставь лайк' }})\">thumb_up</i>\n          <i class=\"material-icons\"\n            ng-click=\"send({payload: {command: 'sendText', text: 'поставь дизлайк' }})\">thumb_down</i>\n        </div>\n        <div style=\"display: inline-block;\">\n          <i class=\"material-icons\" ng-click=\"clickVolume()\" ng-if=\"vol > 3\">volume_up</i>\n          <i class=\"material-icons\" ng-click=\"clickVolume()\" ng-if=\"vol <= 3\">volume_off</i>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n<script>\n  (function (scope) {\n    scope.$watch('msg.payload', function (n, o) {\n      scope.showPlay = n.playing;\n      scope.valTitle = n.playerState.title;\n      scope.valSubtitle = n.playerState.subtitle;\n      scope.valProgress = n.playerState.progress;\n\n      if (scope.valCover === undefined || n.playerState.extra.coverURI !== o.playerState.extra.coverURI) {\n        scope.valCover = 'https://' + n.playerState.extra.coverURI.replace(/%%/, '600x600');\n      }\n    });\n\n    scope.clickVolume = function () {\n      scope.showVolume = scope.showVolume ? false : true;\n    }\n\n    scope.setVolume = function (v) {\n      let volume = v / 100;\n\n      if (v <= 10) {\n        volume = 0.1;\n      }\n      if (v <= 3) {\n        volume = 0;\n      }\n\n      scope.send({ payload: { command: 'setVolume', volume: volume } });\n    }\n\n    scope.setRewind = function (v) {\n      scope.send({ payload: { command: 'rewind', position: scope.valProgress + v } });\n    }\n  })(scope);\n</script>",
+        "storeOutMessages": false,
+        "fwdInMessages": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "x": 540,
+        "y": 1460,
+        "wires": [
+            [
+                "718c364c.dedd68",
+                "23ff4fde.f17518"
+            ]
+        ]
+    },
+    {
+        "id": "8865f91.bf77188",
+        "type": "ui_group",
+        "name": "Alice",
+        "tab": "bd17abae.b2461",
+        "order": 1,
+        "disp": true,
+        "width": 8,
+        "collapse": false
+    },
+    {
+        "id": "bd17abae.b2461",
+        "type": "ui_tab",
+        "name": "Кубик³",
+        "icon": "dashboard",
+        "order": 1,
+        "disabled": false,
+        "hidden": false
+    }
+]
